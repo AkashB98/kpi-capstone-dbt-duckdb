@@ -1,0 +1,27 @@
+name: "kpi_capstone"
+version: "1.0.0"
+config-version: 2
+
+profile: "kpi_capstone"
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+vars:
+  # Fixed "today" for deterministic tests — never now() in a test.
+  as_of_date: "2026-03-31"
+
+models:
+  kpi_capstone:
+    staging:
+      +materialized: view
+    intermediate:
+      +materialized: table
+    marts:
+      +materialized: table
