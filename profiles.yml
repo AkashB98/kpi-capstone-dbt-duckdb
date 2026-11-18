@@ -1,0 +1,13 @@
+kpi_capstone:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: warehouse.duckdb
+      schema: analytics
+      threads: 4
+    bad:
+      type: duckdb
+      path: warehouse_bad.duckdb
+      schema: analytics
+      threads: 4
