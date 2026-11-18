@@ -1,0 +1,50 @@
+version: 2
+
+models:
+  - name: kpi_daily
+    description: "Company-level daily KPIs for fictional Helios Home. Metric definitions are in each column's meta block (formula + target). These are metric definitions in YAML — this project does not run dbt's MetricFlow semantic layer, and the README says so."
+    columns:
+      - name: kpi_date
+        data_tests:
+          - unique
+          - not_null
+        meta:
+          metric: { name: "KPI date", formula: "calendar day, America/Chicago reporting", target: "one row per day, no gaps" }
+      - name: revenue_dollars
+        meta:
+          metric: { name: "Revenue", formula: "sum(gross - discount - refund) / 100, from stg_orders.net_cents", target: ">= $30,000/day (90-day synthetic average)" }
+      - name: orders
+        meta:
+          metric: { name: "Orders", formula: "count of orders per day, all stores", target: ">= 330/day" }
+      - name: aov_dollars
+        meta:
+          metric: { name: "Average order value", formula: "revenue_dollars / orders", target: ">= $88.00" }
+      - name: conversion_rate
+        meta:
+          metric: { name: "Conversion rate", formula: "orders / visitors (same day, all stores)", target: ">= 0.030" }
+      - name: refund_rate
+        meta:
+          metric: { name: "Refund rate", formula: "refund_cents / (gross_cents - discount_cents)", target: "<= 0.022" }
+  - name: dim_stores
+    description: "Current store dimension from the SCD2 snapshot (current row only) joined to the seed reference."
+    columns:
+      - name: store_id
+        data_tests:
+          - unique
+          - not_null
+
+unit_tests:
+  - name: test_int_daily_store_kpis_math
+    description: "AOV, conversion and refund-rate math on two hand-computed orders + traffic."
+    model: int_daily_store_kpis
+    given:
+      - input: ref('stg_orders')
+        rows:
+          - { order_date: "2026-01-05", store_id: "S1", gross_cents: 10000, discount_cents: 1000, refund_cents: 0, net_cents: 9000 }
+          - { order_date: "2026-01-05", store_id: "S1", gross_cents: 5000, discount_cents: 0, refund_cents: 1400, net_cents: 3600 }
+      - input: ref('stg_daily_traffic')
+        rows:
+          - { traffic_date: "2026-01-05", store_id: "S1", visitors: 100, sessions: 120 }
+    expect:
+      rows:
+        - { kpi_date: "2026-01-05", store_id: "S1", orders: 2, revenue_cents: 12600, refund_cents: 1400, sold_cents: 14000, visitors: 100, sessions: 120, aov_cents: 6300.0, conversion_rate: 0.02, refund_rate: 0.1 }
