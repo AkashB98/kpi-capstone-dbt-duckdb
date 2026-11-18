@@ -1,0 +1,15 @@
+version: 2
+
+snapshots:
+  - name: stores_snapshot
+    relation: source('raw', 'stores')
+    description: "SCD2 history of the store dimension. Chicago (S4) changes region Midwest -> Central on 2026-02-15; the snapshot keeps both versions."
+    config:
+      schema: snapshots
+      unique_key: store_id
+      strategy: timestamp
+      updated_at: updated_at
+    columns:
+      - name: store_id
+        data_tests:
+          - not_null
