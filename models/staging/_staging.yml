@@ -1,0 +1,36 @@
+version: 2
+
+models:
+  - name: stg_orders
+    description: "Typed orders with net_cents computed once. Incremental on order_date, keyed by order_id."
+    columns:
+      - name: order_id
+        data_tests:
+          - unique
+          - not_null
+      - name: order_date
+        data_tests:
+          - not_null
+      - name: channel
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["web", "mobile_app", "in_store"]
+          - relationships:
+              arguments:
+                to: ref('channel_map')
+                field: channel
+      - name: status
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["completed", "refunded", "partially_refunded"]
+      - name: net_cents
+        data_tests:
+          - not_null
+  - name: stg_daily_traffic
+    description: "Typed daily traffic per store."
+    columns:
+      - name: visitors
+        data_tests:
+          - not_null
